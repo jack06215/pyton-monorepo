@@ -17,8 +17,10 @@ class FunctionCallModel(BaseModel):
         schema = super().model_json_schema(*args, **kwargs)
         schema.pop("description", None)
         schema.pop("title", None)
+        schema["additionalProperties"] = False
         for prop in schema.get("properties", {}).values():
             prop.pop("title", None)
+            prop["additionalProperties"] = False
 
         return schema
 
@@ -43,19 +45,20 @@ class FunctionCallModel(BaseModel):
     #     return value
 
     @classmethod
-    def openai_function_tool_schema(cls) -> FunctionDefinition:
-        return FunctionDefinition(
+    def openai_function_tool_schema(cls) -> dict[str, Any]:
+        return dict(
             name=cast(str, cls.name),
             description=cast(str, cls.description),
             parameters=cls.model_json_schema(),
+            additionalProperties=False,
         )
 
 
-class WeatherTemperature(FunctionCallModel):
-    name: ClassVar[str] = "weather_temperature"
-    description: ClassVar[str] = "Get the current temperature for a given location."
-    temperature: float = Field(description="The temperature in degrees Celsius.")
+# class WeatherTemperature(FunctionCallModel):
+#     name: ClassVar[str] = "weather_temperature"
+#     description: ClassVar[str] = "Get the current temperature for a given location."
+#     temperature: float = Field(description="The temperature in degrees Celsius.")
 
 
-get_weather_temperature = WeatherTemperature.openai_function_tool_schema()
-print(json.dumps(get_weather_temperature, indent=2))
+# get_weather_temperature = WeatherTemperature.openai_function_tool_schema()
+# print(json.dumps(get_weather_temperature, indent=2))

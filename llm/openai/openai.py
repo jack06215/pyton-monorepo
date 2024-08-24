@@ -29,7 +29,12 @@ class OpenAIModel(BaseChatModel):
             "Authorization": f"Bearer {self.api_key}",
         }
 
-    def invoke(self, messages: list[dict[str, str]]) -> Any:
+    def invoke(
+        self,
+        messages: list[dict[str, str]],
+        tools: list[dict[str, Any]] = [],
+        tool_choice: str = "none",
+    ) -> Any:
         system = messages[0]["content"]
         user = messages[1]["content"]
 
@@ -43,15 +48,30 @@ class OpenAIModel(BaseChatModel):
             "temperature": self.temperature,
         }
 
-        if self.json_response:
-            payload["response_format"] = {"type": "json_object"}
+        if tools and tool_choice != "none":
+            payload["tools"] = [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": tool["name"],
+                        "description": tool["description"],
+                        "parameters": tool["parameters"],
+                    },
+                    "strict": True,
+                }
+                for tool in tools
+            ]
+            payload["tool_choice"] = tool_choice
 
         try:
+            print(json.dumps(payload, indent=2))
             response_json = self._make_request(
                 self.model_endpoint,
                 self.headers,
                 payload,
             )
+
+            print(json.dumps(response_json, indent=2))
 
             if self.json_response:
                 response = json.dumps(
