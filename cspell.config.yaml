@@ -1,0 +1,7 @@
+version: "0.2"
+ignorePaths: []
+dictionaryDefinitions: [{ "name": "mydict", "path": "./dictionary.txt" }]
+dictionaries: ["mydict"]
+words: []
+ignoreWords: []
+import: []

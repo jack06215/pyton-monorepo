@@ -1757,6 +1757,22 @@ httplib2 = ">=0.19.0,<1.dev0"
 uritemplate = ">=3.0.1,<5"
 
 [[package]]
+name = "google-api-python-client-stubs"
+version = "1.27.0"
+description = "Type stubs for google-api-python-client"
+optional = false
+python-versions = "<4.0,>=3.7"
+files = [
+    {file = "google_api_python_client_stubs-1.27.0-py3-none-any.whl", hash = "sha256:3c1f9f2a7cac8d1e9a7e84ed24e6c29cf4c643b0f94e39ed09ac1b7e91ab239a"},
+    {file = "google_api_python_client_stubs-1.27.0.tar.gz", hash = "sha256:148e16613e070969727f39691e23a73cdb87c65a4fc8133abd4c41d17b80b313"},
+]
+
+[package.dependencies]
+google-api-python-client = ">=2.141.0"
+types-httplib2 = ">=0.22.0.2"
+typing-extensions = ">=3.10.0"
+
+[[package]]
 name = "google-auth"
 version = "2.34.0"
 description = "Google Authentication Library"
@@ -5215,6 +5231,17 @@ shellingham = ">=1.3.0"
 typing-extensions = ">=3.7.4.3"
 
 [[package]]
+name = "types-httplib2"
+version = "0.22.0.20240310"
+description = "Typing stubs for httplib2"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types-httplib2-0.22.0.20240310.tar.gz", hash = "sha256:1eda99fea18ec8a1dc1a725ead35b889d0836fec1b11ae6f1fe05440724c1d15"},
+    {file = "types_httplib2-0.22.0.20240310-py3-none-any.whl", hash = "sha256:8cd706fc81f0da32789a4373a28df6f39e9d5657d1281db4d2fd22ee29e83661"},
+]
+
+[[package]]
 name = "types-python-dateutil"
 version = "2.9.0.20240821"
 description = "Typing stubs for python-dateutil"
@@ -5235,6 +5262,20 @@ files = [
     {file = "types-pytz-2024.1.0.20240417.tar.gz", hash = "sha256:6810c8a1f68f21fdf0f4f374a432487c77645a0ac0b31de4bf4690cf21ad3981"},
     {file = "types_pytz-2024.1.0.20240417-py3-none-any.whl", hash = "sha256:8335d443310e2db7b74e007414e74c4f53b67452c0cb0d228ca359ccfba59659"},
 ]
+
+[[package]]
+name = "types-requests"
+version = "2.32.0.20240712"
+description = "Typing stubs for requests"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types-requests-2.32.0.20240712.tar.gz", hash = "sha256:90c079ff05e549f6bf50e02e910210b98b8ff1ebdd18e19c873cd237737c1358"},
+    {file = "types_requests-2.32.0.20240712-py3-none-any.whl", hash = "sha256:f754283e152c752e46e70942fa2a146b5bc70393522257bb85bd1ef7e019dcc3"},
+]
+
+[package.dependencies]
+urllib3 = ">=2"
 
 [[package]]
 name = "typing-extensions"
@@ -5832,4 +5873,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "3.11.7"
-content-hash = "b954b085797841adc81604f7732415f381a1598fcb12630b8d8e274305e3d211"
+content-hash = "d1068335a1a54a5d5c108374fe7404c6eec12c83b3c47360e675275a0086e25c"

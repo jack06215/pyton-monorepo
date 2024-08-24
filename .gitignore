@@ -139,3 +139,6 @@ __azurite_db*__.json
 
 # VSCode Personal settings
 .vscode/settings.json
+
+# Secret files
+secret/

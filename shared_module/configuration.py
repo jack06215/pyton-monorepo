@@ -17,14 +17,16 @@ def get_env_or_throw(
 class EnvironmentVariable(BaseModel):
     openai_api_key: str
     gcp_service_account: str
+    gcp_client_secret_desktop: str
 
     @classmethod
-    def from_dotev(cls) -> "EnvironmentVariable":
+    def from_dotenv(cls) -> "EnvironmentVariable":
         load_dotenv()
         return cls(
             openai_api_key=get_env_or_throw("OPENAI_API_KEY"),
             gcp_service_account=get_env_or_throw("GCP_SERVICE_ACCOUNT_JSON"),
+            gcp_client_secret_desktop=get_env_or_throw("GCP_CLIENT_SECRET_DESKTOP_APP"),
         )
 
 
-EnvVar = EnvironmentVariable.from_dotev()
+EnvVar = EnvironmentVariable.from_dotenv()

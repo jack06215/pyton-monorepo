@@ -1,0 +1,11 @@
+dotenv
+fastapi
+langchain_core
+mesop
+openai
+openai
+pydantic
+sseclient
+stateclass
+usecase
+uvicorn
