@@ -1,9 +1,9 @@
 import json
-import os
+from typing import Any
 
 import requests
 
-from llm_model.base import BaseChatModel
+from llm.base import BaseChatModel
 from shared_module.configuration import EnvVar
 
 
@@ -12,16 +12,15 @@ class OpenAIModel(BaseChatModel):
         self,
         temperature: float,
         model: str,
-        json_response: bool,
         max_retries: int = 3,
         retry_delay: int = 1,
     ):
         super().__init__(
-            temperature,
-            model,
-            json_response,
-            max_retries,
-            retry_delay,
+            temperature=temperature,
+            model=model,
+            max_retries=max_retries,
+            retry_delay=retry_delay,
+            json_response=False,
         )
         self.model_endpoint = "https://api.openai.com/v1/chat/completions"
         self.api_key = EnvVar.openai_api_key
@@ -30,7 +29,7 @@ class OpenAIModel(BaseChatModel):
             "Authorization": f"Bearer {self.api_key}",
         }
 
-    def invoke(self, messages: list[dict[str, str]]) -> str:
+    def invoke(self, messages: list[dict[str, str]]) -> Any:
         system = messages[0]["content"]
         user = messages[1]["content"]
 

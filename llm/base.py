@@ -9,7 +9,7 @@ class BaseChatModel:
         self,
         temperature: float,
         model: str,
-        json_response: bool,
+        json_response: bool | None = None,
         max_retries: int = 3,
         retry_delay: int = 1,
     ):
@@ -25,10 +25,14 @@ class BaseChatModel:
         retry=retry_if_exception_type(requests.RequestException),
     )
     def _make_request(self, url, headers, payload):
-        response = requests.post(
-            url,
-            headers=headers,
-            data=json.dumps(payload),
-        )
-        response.raise_for_status()
-        return response.json()
+        try:
+            response = requests.post(
+                url,
+                headers=headers,
+                data=json.dumps(payload),
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            print(f"Request failed: {e}")
+            raise e
