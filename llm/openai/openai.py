@@ -1,9 +1,12 @@
 import json
-from typing import Any
+from dataclasses import asdict
+from typing import Any, cast
 
 import requests
+from openai.types.shared_params import FunctionDefinition
 
 from llm.base import BaseChatModel
+from llm.openai.model import FunctionCallModel
 from shared_module.configuration import EnvVar
 
 
@@ -32,7 +35,7 @@ class OpenAIModel(BaseChatModel):
     def invoke(
         self,
         messages: list[dict[str, str]],
-        tools: list[dict[str, Any]] = [],
+        tools: list[dict[str, Any]] | list[FunctionDefinition] | None = None,
         tool_choice: str = "none",
     ) -> Any:
         system = messages[0]["content"]
@@ -46,22 +49,33 @@ class OpenAIModel(BaseChatModel):
             ],
             "stream": False,
             "temperature": self.temperature,
+            "tool_choice": "none",
         }
 
         if tools and tool_choice != "none":
-            payload["tools"] = [
-                {
-                    "type": "function",
-                    "function": {
-                        "name": tool["name"],
-                        "description": tool["description"],
-                        "parameters": tool["parameters"],
-                    },
-                    "strict": True,
-                }
-                for tool in tools
-            ]
-            payload["tool_choice"] = tool_choice
+            if isinstance(tools[0], dict):
+                payload["tools"] = [
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": tool["name"],
+                            "description": tool["description"],
+                            "parameters": tool["parameters"],
+                            "strict": tool["strict"],
+                        },
+                    }
+                    for tool in cast(list[dict[str, Any]], tools)
+                ]
+                payload["tool_choice"] = tool_choice
+            elif isinstance(tools[0], FunctionDefinition):
+                payload["tools"] = [
+                    {
+                        "type": "function",
+                        "function": tool,
+                    }
+                    for tool in cast(list[FunctionCallModel], tools)
+                ]
+                payload["tool_choice"] = tool_choice
 
         try:
             print(json.dumps(payload, indent=2))

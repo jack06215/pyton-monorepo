@@ -12,7 +12,7 @@ from shared_module.prompt_template import simple_prompt
 class GetCapitalCityFunction(FunctionCallModel):
     name: ClassVar[str] = "get_capital_city"
     description: ClassVar[str] = "Get the capital city of a given country."
-    capital_city: float = Field(
+    capital_city: str = Field(
         description="The capital city of the given country, in UPPERCASE."
     )
 
@@ -37,7 +37,7 @@ def main() -> None:
     response = model.invoke(
         messages,
         tools=[
-            GetCapitalCityFunction.openai_function_tool_schema(),
+            GetCapitalCityFunction.to_function_definition(),
         ],
         tool_choice="auto",
     )

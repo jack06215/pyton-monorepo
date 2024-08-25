@@ -45,12 +45,21 @@ class FunctionCallModel(BaseModel):
     #     return value
 
     @classmethod
-    def openai_function_tool_schema(cls) -> dict[str, Any]:
+    def to_function_definition_dict(cls) -> dict[str, Any]:
         return dict(
             name=cast(str, cls.name),
             description=cast(str, cls.description),
             parameters=cls.model_json_schema(),
-            additionalProperties=False,
+            strict=True,
+        )
+
+    @classmethod
+    def to_function_definition(cls) -> FunctionDefinition:
+        return FunctionDefinition(
+            name=cast(str, cls.name),
+            description=cast(str, cls.description),
+            parameters=cls.model_json_schema(),
+            strict=True,
         )
 
 
@@ -60,5 +69,5 @@ class FunctionCallModel(BaseModel):
 #     temperature: float = Field(description="The temperature in degrees Celsius.")
 
 
-# get_weather_temperature = WeatherTemperature.openai_function_tool_schema()
-# print(json.dumps(get_weather_temperature, indent=2))
+# get_weather_temperature = WeatherTemperature
+# print(json.dumps(get_weather_temperature.to_function_definition(), indent=2))
