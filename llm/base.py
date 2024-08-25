@@ -1,4 +1,5 @@
 import json
+from typing import Any, Generator, cast
 
 import requests
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
@@ -36,3 +37,23 @@ class BaseChatModel:
         except requests.RequestException as e:
             print(f"Request failed: {e}")
             raise e
+
+    async def _make_stream_request(self, url, headers, payload) -> Any:
+        response = requests.post(
+            url,
+            headers=headers,
+            data=json.dumps(payload),
+            stream=True,  # Ensure the stream parameter is set to True
+        )
+
+        # Process the response line by line if newline-delimited
+        # or use response.iter_content for arbitrary chunk sizes
+        for chunk in response.iter_lines():
+            try:
+                data = cast(str, chunk.decode()[5:])
+                if data.strip() not in ("", "[DONE]"):
+                    return json.loads(data)
+
+            except requests.RequestException as e:
+                print(f"Request failed: {e}")
+                raise e

@@ -1,3 +1,4 @@
+import asyncio
 import json
 from datetime import datetime
 from typing import ClassVar, cast
@@ -15,7 +16,7 @@ class GetCapitalCityFunction(BaseFunctionModel):
     )
 
 
-def main() -> None:
+async def main() -> None:
     system_prompt = simple_prompt()
     messages = [
         {
@@ -28,7 +29,7 @@ def main() -> None:
         },
     ]
     model = OpenAIModel(
-        model="gpt-4o",
+        model="gpt-3.5-turbo",
         temperature=0,
     )
     tools = [
@@ -36,11 +37,10 @@ def main() -> None:
             name="get_capital_city",
             description="Get the capital city of a given country.",
             parameters=GetCapitalCityFunction.model_json_schema(),
-            strict=True,
         ),
     ]
 
-    response = model.invoke(
+    response = await model.ainvoke(
         messages,
         tools=list(map(lambda x: cast(BaseModel, x), tools)),
         tool_choice="auto",
@@ -49,5 +49,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    print(GetCapitalCityFunction.model_json_schema())
-    main()
+    # print(GetCapitalCityFunction.model_json_schema())
+    asyncio.run(main())

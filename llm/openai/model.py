@@ -29,7 +29,7 @@ class FunctionCallModel(BaseModel):
     name: str
     description: str
     parameters: dict[str, Any]
-    strict: bool
+    strict: bool = True
 
     def to_function_definition(self) -> FunctionDefinition:
         return FunctionDefinition(
