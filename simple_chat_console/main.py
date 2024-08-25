@@ -1,17 +1,15 @@
 import json
 from datetime import datetime
-from typing import ClassVar
+from typing import ClassVar, cast
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
-from llm.openai.model import FunctionCallModel
+from llm.openai.model import BaseFunctionModel, FunctionCallModel
 from llm.openai.openai import OpenAIModel
 from shared_module.prompt_template import simple_prompt
 
 
-class GetCapitalCityFunction(FunctionCallModel):
-    name: ClassVar[str] = "get_capital_city"
-    description: ClassVar[str] = "Get the capital city of a given country."
+class GetCapitalCityFunction(BaseFunctionModel):
     capital_city: str = Field(
         description="The capital city of the given country, in UPPERCASE."
     )
@@ -33,16 +31,23 @@ def main() -> None:
         model="gpt-4o",
         temperature=0,
     )
+    tools = [
+        FunctionCallModel(
+            name="get_capital_city",
+            description="Get the capital city of a given country.",
+            parameters=GetCapitalCityFunction.model_json_schema(),
+            strict=True,
+        ),
+    ]
 
     response = model.invoke(
         messages,
-        tools=[
-            GetCapitalCityFunction.to_function_definition(),
-        ],
+        tools=list(map(lambda x: cast(BaseModel, x), tools)),
         tool_choice="auto",
     )
     print(response)
 
 
 if __name__ == "__main__":
+    print(GetCapitalCityFunction.model_json_schema())
     main()

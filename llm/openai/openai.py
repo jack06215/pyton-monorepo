@@ -4,6 +4,7 @@ from typing import Any, cast
 
 import requests
 from openai.types.shared_params import FunctionDefinition
+from pydantic import BaseModel
 
 from llm.base import BaseChatModel
 from llm.openai.model import FunctionCallModel
@@ -35,9 +36,10 @@ class OpenAIModel(BaseChatModel):
     def invoke(
         self,
         messages: list[dict[str, str]],
-        tools: list[dict[str, Any]] | list[FunctionDefinition] | None = None,
+        tools: list[dict[str, Any]] | list[BaseModel] | None = None,
         tool_choice: str = "none",
     ) -> Any:
+        print(tools)
         system = messages[0]["content"]
         user = messages[1]["content"]
 
@@ -67,13 +69,13 @@ class OpenAIModel(BaseChatModel):
                     for tool in cast(list[dict[str, Any]], tools)
                 ]
                 payload["tool_choice"] = tool_choice
-            elif isinstance(tools[0], FunctionDefinition):
+            elif isinstance(tools[0], BaseModel):
                 payload["tools"] = [
                     {
                         "type": "function",
-                        "function": tool,
+                        "function": tool.model_dump(exclude={"title"}),
                     }
-                    for tool in cast(list[FunctionCallModel], tools)
+                    for tool in cast(list[BaseModel], tools)
                 ]
                 payload["tool_choice"] = tool_choice
 
