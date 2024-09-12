@@ -52,11 +52,11 @@ class OpenAIModel(BaseChatModel):
             ],
             "stream": False,
             "temperature": self.temperature,
-            "tool_choice": "none",
         }
 
         if tools and tool_choice != "none":
             if isinstance(tools[0], dict):
+                payload["tool_choice"] = tool_choice
                 payload["tools"] = [
                     {
                         "type": "function",
@@ -71,6 +71,7 @@ class OpenAIModel(BaseChatModel):
                 ]
                 payload["tool_choice"] = tool_choice
             elif isinstance(tools[0], BaseModel):
+                payload["tool_choice"] = tool_choice
                 payload["tools"] = [
                     {
                         "type": "function",
