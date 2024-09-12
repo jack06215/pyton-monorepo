@@ -16,6 +16,7 @@ class OpenAIModel(BaseChatModel):
         self,
         temperature: float,
         model: str,
+        json_response: bool = True,
         max_retries: int = 3,
         retry_delay: int = 1,
     ):
@@ -24,7 +25,7 @@ class OpenAIModel(BaseChatModel):
             model=model,
             max_retries=max_retries,
             retry_delay=retry_delay,
-            json_response=False,
+            json_response=json_response,
         )
         self.model_endpoint = "https://api.openai.com/v1/chat/completions"
         self.api_key = EnvVar.openai_api_key
@@ -85,14 +86,7 @@ class OpenAIModel(BaseChatModel):
                 self.headers,
                 payload,
             )
-            if self.json_response:
-                response = json.dumps(
-                    json.loads(
-                        response_json["choices"][0]["message"]["content"],
-                    )
-                )
-            else:
-                response = response_json["choices"][0]["message"]["content"]
+            response = json.dumps(response_json)
 
             return response
         except requests.RequestException as e:
@@ -152,31 +146,21 @@ class OpenAIModel(BaseChatModel):
                 payload["tool_choice"] = tool_choice
 
         try:
-            response_json = self._make_stream_request(
+            async for chunk in await self._make_stream_request(
                 self.model_endpoint,
                 self.headers,
                 payload,
-            )
-            if self.json_response:
-                for line in response_json:
-                    pass
-                    # response = json.dumps(
-                    #     json.loads(
-                    #         line["choices"][0]["message"]["content"],
-                    #     )
-                    # )
-                    # print(line)
-            else:
-                yield response_json
+            ):
+                yield json.dumps(chunk)
 
             # return {}
         except requests.RequestException as e:
-            return json.dumps(
+            yield json.dumps(
                 {
                     "error": f"Error in invoking model after {self.max_retries} retries: {str(e)}"
                 }
             )
         except json.JSONDecodeError as e:
-            return json.dumps(
+            yield json.dumps(
                 {"error": f"Error processing response: {str(e)}"},
             )

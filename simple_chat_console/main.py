@@ -31,6 +31,7 @@ async def main() -> None:
     model = OpenAIModel(
         model="gpt-3.5-turbo",
         temperature=0,
+        json_response=True,
     )
     tools = [
         FunctionCallModel(
@@ -40,7 +41,7 @@ async def main() -> None:
         ),
     ]
 
-    response = await model.ainvoke(
+    response = model.invoke(
         messages,
         tools=list(map(lambda x: cast(BaseModel, x), tools)),
         tool_choice="auto",
