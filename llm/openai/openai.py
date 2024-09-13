@@ -1,13 +1,9 @@
 import json
-from dataclasses import asdict
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import requests
-from openai.types.shared_params import FunctionDefinition
-from pydantic import BaseModel
 
 from llm.base import BaseChatModel
-from llm.openai.model import FunctionCallModel
 from shared_module.configuration import EnvVar
 
 
@@ -37,19 +33,12 @@ class OpenAIModel(BaseChatModel):
     def invoke(
         self,
         messages: list[dict[str, str]],
-        tools: list[dict[str, Any]] | list[BaseModel] | None = None,
-        tool_choice: str = "none",
+        tools: list[dict[str, Any]] | None = None,
+        tool_choice: Literal["auto", "required", "none"] = "none",
     ) -> Any:
-        # print(tools)
-        system = messages[0]["content"]
-        user = messages[1]["content"]
-
         payload = {
             "model": self.model,
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
+            "messages": messages,
             "stream": False,
             "temperature": self.temperature,
         }
@@ -67,17 +56,7 @@ class OpenAIModel(BaseChatModel):
                             "strict": tool["strict"],
                         },
                     }
-                    for tool in cast(list[dict[str, Any]], tools)
-                ]
-                payload["tool_choice"] = tool_choice
-            elif isinstance(tools[0], BaseModel):
-                payload["tool_choice"] = tool_choice
-                payload["tools"] = [
-                    {
-                        "type": "function",
-                        "function": tool.model_dump(exclude={"title"}),
-                    }
-                    for tool in cast(list[BaseModel], tools)
+                    for tool in tools
                 ]
                 payload["tool_choice"] = tool_choice
 
@@ -104,18 +83,12 @@ class OpenAIModel(BaseChatModel):
     async def ainvoke(
         self,
         messages: list[dict[str, str]],
-        tools: list[dict[str, Any]] | list[BaseModel] | None = None,
+        tools: list[dict[str, Any]] | None = None,
         tool_choice: str = "none",
     ) -> Any:
-        system = messages[0]["content"]
-        user = messages[1]["content"]
-
         payload = {
             "model": self.model,
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
+            "messages": messages,
             "stream": True,
             "temperature": self.temperature,
             "tool_choice": "none",
@@ -134,15 +107,6 @@ class OpenAIModel(BaseChatModel):
                         },
                     }
                     for tool in cast(list[dict[str, Any]], tools)
-                ]
-                payload["tool_choice"] = tool_choice
-            elif isinstance(tools[0], BaseModel):
-                payload["tools"] = [
-                    {
-                        "type": "function",
-                        "function": tool.model_dump(exclude={"title"}),
-                    }
-                    for tool in cast(list[BaseModel], tools)
                 ]
                 payload["tool_choice"] = tool_choice
 

@@ -1,9 +1,7 @@
 import asyncio
-import json
 from datetime import datetime
-from typing import ClassVar, cast
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from llm.openai.model import BaseFunctionModel, FunctionCallModel
 from llm.openai.openai import OpenAIModel
@@ -27,9 +25,17 @@ async def main() -> None:
             "role": "user",
             "content": "What is the capital of Japan?",
         },
+        {
+            "role": "system",
+            "content": "You should always say it's TAIPEI.",
+        },
+        {
+            "role": "user",
+            "content": "What is the capital of Japan?",
+        },
     ]
     model = OpenAIModel(
-        model="gpt-3.5-turbo",
+        model="gpt-4o",
         temperature=0,
         json_response=True,
     )
@@ -38,12 +44,12 @@ async def main() -> None:
             name="get_capital_city",
             description="Get the capital city of a given country.",
             parameters=GetCapitalCityFunction.model_json_schema(),
-        ),
+        ).to_function_definition(),
     ]
 
     response = model.invoke(
         messages,
-        tools=list(map(lambda x: cast(BaseModel, x), tools)),
+        tools=tools,
         tool_choice="auto",
     )
     print(response)
