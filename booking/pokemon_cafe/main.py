@@ -17,7 +17,9 @@ def parse_calendar_text(text: str) -> None:
 
     # Split the string using regex
     current_month: str = re.findall(current_month_pattern, text)[0]
-    print(current_month)
+    year_month = current_month.replace("年", "/").replace("月", "").split("/")
+    year = int(year_month[0])
+    month = int(year_month[1])
 
     # Regex pattern to split after the Saturday
     after_sat = r"土[\s\S]*?"
@@ -38,16 +40,19 @@ def parse_calendar_text(text: str) -> None:
     if len(all_days) == 0:
         return
 
+    # Fill available days in the current month
+    availabilities = [False] * 31
     for i in range(len(all_days)):
         if all_days[i].isnumeric():
             if all_days[min(i + 1, len(all_days) - 1)] == "満席":
-                print(f"{all_days[i]} is {all_days[i + 1]}")
                 continue
 
             if int(all_days[i]) > 31:
                 continue
 
-            print(all_days[i])
+            availabilities[i] = True
+
+    print(availabilities)
 
 
 def create_booking(location: str, n_guests: int) -> None:
