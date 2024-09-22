@@ -24,24 +24,30 @@ def parse_calendar_text(text: str) -> None:
     day_of_month: str = re.split(after_sat, text, 1)[1]
 
     # Split based on the pattern that matches the digit "1"
-    split_string: list[str] = re.split(
+    split_string = re.split(
         r"(?<=\b1\b)",
         day_of_month,
-    )[1].splitlines()
+    )
+    first_day_of_month: list[str] = split_string[0].splitlines()
+    rest_of_days: list[str] = split_string[1].splitlines()
+    rest_of_days = rest_of_days[0:-1]  # Remove the "1" at the end
 
-    if len(split_string) == 0:
+    all_days = first_day_of_month + rest_of_days
+    all_days = list(filter(lambda x: x != "", all_days))
+
+    if len(all_days) == 0:
         return
 
-    for i in range(len(split_string)):
-        if split_string[i].isnumeric():
-            if split_string[min(i + 1, len(split_string) - 1)] == "満席":
-                print(f"{split_string[i]} is {split_string[i + 1]}")
+    for i in range(len(all_days)):
+        if all_days[i].isnumeric():
+            if all_days[min(i + 1, len(all_days) - 1)] == "満席":
+                print(f"{all_days[i]} is {all_days[i + 1]}")
                 continue
 
-            if int(split_string[i]) > 31:
+            if int(all_days[i]) > 31:
                 continue
 
-            print(split_string[i])
+            print(all_days[i])
 
 
 def create_booking(location: str, n_guests: int) -> None:
