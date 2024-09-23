@@ -22,7 +22,7 @@ class BookingTimetable(BaseModel):
     col: int
 
 
-def parse_calendar_text(text: str) -> list[datetime] | None:
+def parse_calendar_text(text: str) -> list[datetime]:
     # Get Current month
     current_month_pattern = r"\d{4}年\d{1,2}月"
 
@@ -49,7 +49,7 @@ def parse_calendar_text(text: str) -> list[datetime] | None:
     all_days = list(filter(lambda x: x != "", all_days))
 
     if len(all_days) == 0:
-        return None
+        return []
 
     # Fill available days in the current month
     is_available_flags = [False] * 31
@@ -76,15 +76,15 @@ def parse_calendar_text(text: str) -> list[datetime] | None:
                 )
             )
 
-    return availabilities if len(availabilities) > 0 else None
+    return availabilities
 
 
-def get_timetable(text: str) -> list[BookingTimetable] | None:
+def get_timetable(text: str) -> list[BookingTimetable]:
     timetable_text = text.splitlines()
     timetable_text_sz = len(timetable_text)
-    print(timetable_text)
 
     index = 0
+    res = []
     for i in range(timetable_text_sz):
         if re.search(r"[A-Z]席", timetable_text[i]) is not None:
             end_index = min(i + 4, timetable_text_sz - 1)
@@ -92,14 +92,17 @@ def get_timetable(text: str) -> list[BookingTimetable] | None:
             if timeslot[2] != "満席":
                 row = index // 4
                 col = index % 4
-                print(
-                    f"Found a seat in: {timeslot[0]} from {timeslot[1].replace('~', '')} at ({row}, {col})"
+                res.append(
+                    BookingTimetable(
+                        seat=timeslot[0],
+                        start_from=timeslot[1].replace("~", ""),
+                        row=row + 1,
+                        col=col + 1,
+                    )
                 )
             index += 1
 
-    return [
-        BookingTimetable(seat="A", start_from="10:00", row=2, col=4),
-    ]
+    return res
 
 
 def create_booking(location: str, n_guests: int) -> None:
@@ -152,7 +155,7 @@ def create_booking(location: str, n_guests: int) -> None:
         # First time
         available_dates = parse_calendar_text(calendar_element.text)
         # If no available dates, try next month
-        if available_dates is None:
+        if len(available_dates) == 0:
             driver.find_element(
                 By.XPATH,
                 "//*[contains(text(), '次の月を見る')]",
@@ -165,12 +168,11 @@ def create_booking(location: str, n_guests: int) -> None:
 
         # print(available_dates)
         # Second time if nothing found, there's no available date at the moment
-        # if len(available_dates) == 0:
-        #     return
+        if len(available_dates) == 0:
+            return
 
         # Try booking for the date
-        # TODO[jack06215]: Replace with actual booking time
-        booking_date = datetime.now(tz=timezone(timedelta(hours=9)))
+        booking_date = available_dates[0]
         driver.find_element(
             By.XPATH,
             "//*[contains(text(), " + str(booking_date.day) + ")]",
@@ -182,24 +184,30 @@ def create_booking(location: str, n_guests: int) -> None:
             "//*[@id='time_table']/tbody",
         )
 
-        # with open(
-        #     f"{ROOT_DIR}/pokemon_cafe/sample_data/timetable_has_seats.txt",
-        #     "r",
-        #     encoding="UTF-8",
-        # ) as fp:
-        #     timetable_element = fp.read()
-
         available_timetables = get_timetable(timetable_element.text)
-        if available_timetables is None:
+        if len(available_timetables) == 0:
             return
 
         booking_time = available_timetables[0]
-        res = driver.find_element(
+        print(booking_date.strftime("%Y-%m-%d"))
+        print(booking_time)
+        booking_timeslot_grid = driver.find_element(
             By.XPATH,
             f"//*[@id='time_table']/tbody/tr[{booking_time.row}]/td[{booking_time.col}]",
         )
-        # print(res.rect)
-        res.click()
+        booking_timeslot_grid.click()
+
+        contact_form = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//*[@id='step3-form']"))
+        )
+        confirm_button = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//*[@id='submit_button']"))
+        )
+        contact_form.find_element(By.NAME, "name").send_keys("John Doe")
+        contact_form.find_element(By.NAME, "name_kana").send_keys("John Doe")
+        contact_form.find_element(By.NAME, "phone_number").send_keys("09012345678")
+        contact_form.find_element(By.NAME, "email").send_keys("john.doe@example.com")
+        print(confirm_button.is_displayed())
 
     except NoSuchElementException:
         pass
@@ -213,7 +221,7 @@ def create_booking(location: str, n_guests: int) -> None:
 
 
 def main() -> None:
-    create_booking("Tokyo", 1)
+    create_booking("Tokyo", 2)
 
 
 if __name__ == "__main__":
