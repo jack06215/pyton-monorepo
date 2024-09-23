@@ -80,7 +80,18 @@ def parse_calendar_text(text: str) -> list[datetime] | None:
 
 
 def get_timetable(text: str) -> list[BookingTimetable] | None:
-    # print(text)
+    timetable_text = text.splitlines()
+    timetable_text_sz = len(timetable_text)
+
+    index = 0
+    for i in range(timetable_text_sz):
+        if re.search(r"[A-Z]席", timetable_text[i]) is not None:
+            end_index = min(i + 4, timetable_text_sz - 1)
+            timeslot = timetable_text[i:end_index]
+            if timeslot[2] != "満席":
+                print(f"Found a seat area: {timeslot[0]} from {timeslot[1]} at {index}")
+                index += 1
+
     return [
         BookingTimetable(seat="A", start_from="10:00", row=2, col=4),
     ]
@@ -146,7 +157,7 @@ def create_booking(location: str, n_guests: int) -> None:
             )
             available_dates = parse_calendar_text(calendar_element.text)
 
-        print(available_dates)
+        # print(available_dates)
         # Second time if nothing found, there's no available date at the moment
         # if len(available_dates) == 0:
         #     return
@@ -164,17 +175,24 @@ def create_booking(location: str, n_guests: int) -> None:
             By.XPATH,
             "//*[@id='time_table']/tbody",
         )
+
+        # with open(
+        #     f"{ROOT_DIR}/pokemon_cafe/sample_data/timetable_has_seats.txt",
+        #     "r",
+        #     encoding="UTF-8",
+        # ) as fp:
+        #     text = fp.read()
+
         available_timetables = get_timetable(timetable_element.text)
         if available_timetables is None:
             return
 
         booking_time = available_timetables[0]
-        print(booking_time)
         res = driver.find_element(
             By.XPATH,
             f"//*[@id='time_table']/tbody/tr[{booking_time.row}]/td[{booking_time.col}]",
         )
-        print(res.rect)
+        # print(res.rect)
         res.click()
 
     except NoSuchElementException:
@@ -189,7 +207,7 @@ def create_booking(location: str, n_guests: int) -> None:
 
 
 def main() -> None:
-    create_booking("Tokyo", 2)
+    create_booking("Tokyo", 1)
 
 
 if __name__ == "__main__":
