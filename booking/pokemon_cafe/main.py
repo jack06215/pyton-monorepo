@@ -1,8 +1,9 @@
 import calendar
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
+from pydantic import BaseModel
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
@@ -12,6 +13,13 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
 
 from booking.definition import ROOT_DIR
+
+
+class BookingTimetable(BaseModel):
+    seat: str
+    start_from: str
+    row: int
+    col: int
 
 
 def parse_calendar_text(text: str) -> list[datetime] | None:
@@ -69,6 +77,13 @@ def parse_calendar_text(text: str) -> list[datetime] | None:
             )
 
     return availabilities if len(availabilities) > 0 else None
+
+
+def get_timetable(text: str) -> list[BookingTimetable] | None:
+    # print(text)
+    return [
+        BookingTimetable(seat="A", start_from="10:00", row=2, col=4),
+    ]
 
 
 def create_booking(location: str, n_guests: int) -> None:
@@ -137,7 +152,8 @@ def create_booking(location: str, n_guests: int) -> None:
         #     return
 
         # Try booking for the date
-        booking_date = datetime(year=2024, month=10, day=24)
+        # TODO[jack06215]: Replace with actual booking time
+        booking_date = datetime.now(tz=timezone(timedelta(hours=9)))
         driver.find_element(
             By.XPATH,
             "//*[contains(text(), " + str(booking_date.day) + ")]",
@@ -148,7 +164,18 @@ def create_booking(location: str, n_guests: int) -> None:
             By.XPATH,
             "//*[@id='time_table']/tbody",
         )
-        print(timetable_element.text)
+        available_timetables = get_timetable(timetable_element.text)
+        if available_timetables is None:
+            return
+
+        booking_time = available_timetables[0]
+        print(booking_time)
+        res = driver.find_element(
+            By.XPATH,
+            f"//*[@id='time_table']/tbody/tr[{booking_time.row}]/td[{booking_time.col}]",
+        )
+        print(res.rect)
+        res.click()
 
     except NoSuchElementException:
         pass
@@ -162,7 +189,7 @@ def create_booking(location: str, n_guests: int) -> None:
 
 
 def main() -> None:
-    create_booking("Tokyo", 1)
+    create_booking("Tokyo", 2)
 
 
 if __name__ == "__main__":
