@@ -80,6 +80,7 @@ def create_booking(location: str, n_guests: int) -> None:
     chrome_options = Options()
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_experimental_option("detach", True)
+    # chrome_options.add_argument("--headless")
     service = Service(
         executable_path=os.path.join(
             ROOT_DIR,
@@ -150,6 +151,7 @@ def create_booking(location: str, n_guests: int) -> None:
 
     finally:
         print("Booking process completed.")
+        # driver.quit()
 
 
 def main() -> None:
