@@ -14,7 +14,7 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 from booking.definition import ROOT_DIR
 
 
-def parse_calendar_text(text: str) -> list[datetime]:
+def parse_calendar_text(text: str) -> list[datetime] | None:
     # Get Current month
     current_month_pattern = r"\d{4}年\d{1,2}月"
 
@@ -41,7 +41,7 @@ def parse_calendar_text(text: str) -> list[datetime]:
     all_days = list(filter(lambda x: x != "", all_days))
 
     if len(all_days) == 0:
-        return []
+        return None
 
     # Fill available days in the current month
     is_available_flags = [False] * 31
@@ -68,7 +68,7 @@ def parse_calendar_text(text: str) -> list[datetime]:
                 )
             )
 
-    return availabilities
+    return availabilities if len(availabilities) > 0 else None
 
 
 def create_booking(location: str, n_guests: int) -> None:
@@ -120,7 +120,7 @@ def create_booking(location: str, n_guests: int) -> None:
         # First time
         available_dates = parse_calendar_text(calendar_element.text)
         # If no available dates, try next month
-        if len(available_dates) == 0:
+        if available_dates is None:
             driver.find_element(
                 By.XPATH,
                 "//*[contains(text(), '次の月を見る')]",
