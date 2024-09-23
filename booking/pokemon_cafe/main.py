@@ -132,16 +132,23 @@ def create_booking(location: str, n_guests: int) -> None:
             available_dates = parse_calendar_text(calendar_element.text)
 
         print(available_dates)
-        # # Second time if nothing found, there's no available date at the moment
+        # Second time if nothing found, there's no available date at the moment
         # if len(available_dates) == 0:
         #     return
 
         # Try booking for the date
+        booking_date = datetime(year=2024, month=10, day=24)
         driver.find_element(
             By.XPATH,
-            "//*[contains(text(), " + str(24) + ")]",
+            "//*[contains(text(), " + str(booking_date.day) + ")]",
         ).click()
         driver.find_element(By.XPATH, "//*[@class='button']").click()
+
+        timetable_element = driver.find_element(
+            By.XPATH,
+            "//*[@id='time_table']/tbody",
+        )
+        print(timetable_element.text)
 
     except NoSuchElementException:
         pass
