@@ -1,4 +1,7 @@
+import calendar
+import os
 import re
+from datetime import datetime
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -11,7 +14,7 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 from booking.definition import ROOT_DIR
 
 
-def parse_calendar_text(text: str) -> None:
+def parse_calendar_text(text: str) -> list[datetime]:
     # Get Current month
     current_month_pattern = r"\d{4}年\d{1,2}月"
 
@@ -38,21 +41,34 @@ def parse_calendar_text(text: str) -> None:
     all_days = list(filter(lambda x: x != "", all_days))
 
     if len(all_days) == 0:
-        return
+        return []
 
     # Fill available days in the current month
-    availabilities = [False] * 31
+    is_available_flags = [False] * 31
     for i in range(len(all_days)):
         if all_days[i].isnumeric():
-            if all_days[min(i + 1, len(all_days) - 1)] == "満席":
+            n_day = int(all_days[i])
+            if all_days[min(i + 1, len(all_days) - 1)] in ["満席", "未開放"]:
                 continue
 
-            if int(all_days[i]) > 31:
+            if n_day > 31:
                 continue
 
-            availabilities[i] = True
+            is_available_flags[n_day - 1] = True
 
-    print(availabilities)
+    availabilities = []
+    day_range = calendar.monthrange(year, month)[1]
+    for i in range(day_range):
+        if is_available_flags[i]:
+            availabilities.append(
+                datetime(
+                    year=year,
+                    month=month,
+                    day=i + 1,
+                )
+            )
+
+    return availabilities
 
 
 def create_booking(location: str, n_guests: int) -> None:
@@ -64,7 +80,12 @@ def create_booking(location: str, n_guests: int) -> None:
     chrome_options = Options()
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_experimental_option("detach", True)
-    service = Service(executable_path=f"{ROOT_DIR}/chromedriver.exe")
+    service = Service(
+        executable_path=os.path.join(
+            ROOT_DIR,
+            "chromedriver.exe",
+        )
+    )
     driver = webdriver.Chrome(options=chrome_options, service=service)
     driver.get(website)
     try:
@@ -95,7 +116,31 @@ def create_booking(location: str, n_guests: int) -> None:
             By.XPATH,
             "//*[@id='step2-form']/div",
         )
-        parse_calendar_text(calendar_element.text)
+        # First time
+        available_dates = parse_calendar_text(calendar_element.text)
+        # If no available dates, try next month
+        if len(available_dates) == 0:
+            driver.find_element(
+                By.XPATH,
+                "//*[contains(text(), '次の月を見る')]",
+            ).click()
+            calendar_element = driver.find_element(
+                By.XPATH,
+                "//*[@id='step2-form']/div",
+            )
+            available_dates = parse_calendar_text(calendar_element.text)
+
+        print(available_dates)
+        # # Second time if nothing found, there's no available date at the moment
+        # if len(available_dates) == 0:
+        #     return
+
+        # Try booking for the date
+        driver.find_element(
+            By.XPATH,
+            "//*[contains(text(), " + str(24) + ")]",
+        ).click()
+        driver.find_element(By.XPATH, "//*[@class='button']").click()
 
     except NoSuchElementException:
         pass
