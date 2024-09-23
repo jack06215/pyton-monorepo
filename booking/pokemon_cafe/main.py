@@ -89,8 +89,12 @@ def get_timetable(text: str) -> list[BookingTimetable] | None:
             end_index = min(i + 4, timetable_text_sz - 1)
             timeslot = timetable_text[i:end_index]
             if timeslot[2] != "満席":
-                print(f"Found a seat area: {timeslot[0]} from {timeslot[1]} at {index}")
-                index += 1
+                row = index // 4
+                col = index % 4
+                print(
+                    f"Found a seat in: {timeslot[0]} from {timeslot[1].replace('~', '')} at ({row}, {col})"
+                )
+            index += 1
 
     return [
         BookingTimetable(seat="A", start_from="10:00", row=2, col=4),
@@ -98,102 +102,102 @@ def get_timetable(text: str) -> list[BookingTimetable] | None:
 
 
 def create_booking(location: str, n_guests: int) -> None:
-    if location == "Tokyo":
-        website = "https://reserve.pokemon-cafe.jp/"
-    elif location == "Osaka":
-        website = "https://osaka.pokemon-cafe.jp/"
+    # if location == "Tokyo":
+    #     website = "https://reserve.pokemon-cafe.jp/"
+    # elif location == "Osaka":
+    #     website = "https://osaka.pokemon-cafe.jp/"
 
-    chrome_options = Options()
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_experimental_option("detach", True)
-    # chrome_options.add_argument("--headless")
-    service = Service(
-        executable_path=os.path.join(
-            ROOT_DIR,
-            "chromedriver.exe",
-        )
-    )
-    driver = webdriver.Chrome(options=chrome_options, service=service)
-    driver.get(website)
+    # chrome_options = Options()
+    # chrome_options = webdriver.ChromeOptions()
+    # chrome_options.add_experimental_option("detach", True)
+    # # chrome_options.add_argument("--headless")
+    # service = Service(
+    #     executable_path=os.path.join(
+    #         ROOT_DIR,
+    #         "chromedriver.exe",
+    #     )
+    # )
+    # driver = webdriver.Chrome(options=chrome_options, service=service)
+    # driver.get(website)
     try:
-        # Step 1: Agree to terms and conditions
-        driver.find_element(
-            By.XPATH,
-            "//*[@class='agreeChecked']",
-        ).click()
-        driver.find_element(
-            By.XPATH,
-            "//*[@class='button']",
-        ).click()
+        # # Step 1: Agree to terms and conditions
+        # driver.find_element(
+        #     By.XPATH,
+        #     "//*[@class='agreeChecked']",
+        # ).click()
+        # driver.find_element(
+        #     By.XPATH,
+        #     "//*[@class='button']",
+        # ).click()
 
-        # Step 2: Make reservation button
-        make_reservation_button = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located(
-                (By.XPATH, "//*[@class='button arrow-down']")
-            )
-        )
-        make_reservation_button.click()
+        # # Step 2: Make reservation button
+        # make_reservation_button = WebDriverWait(driver, 10).until(
+        #     EC.presence_of_element_located(
+        #         (By.XPATH, "//*[@class='button arrow-down']")
+        #     )
+        # )
+        # make_reservation_button.click()
 
-        # Step 3: Fill in number of people
-        select = Select(driver.find_element(By.NAME, "guest"))
-        select.select_by_index(n_guests)
+        # # Step 3: Fill in number of people
+        # select = Select(driver.find_element(By.NAME, "guest"))
+        # select.select_by_index(n_guests)
 
-        # Step 4: Reads calendar and find available dates
-        calendar_element = driver.find_element(
-            By.XPATH,
-            "//*[@id='step2-form']/div",
-        )
-        # First time
-        available_dates = parse_calendar_text(calendar_element.text)
-        # If no available dates, try next month
-        if available_dates is None:
-            driver.find_element(
-                By.XPATH,
-                "//*[contains(text(), '次の月を見る')]",
-            ).click()
-            calendar_element = driver.find_element(
-                By.XPATH,
-                "//*[@id='step2-form']/div",
-            )
-            available_dates = parse_calendar_text(calendar_element.text)
+        # # Step 4: Reads calendar and find available dates
+        # calendar_element = driver.find_element(
+        #     By.XPATH,
+        #     "//*[@id='step2-form']/div",
+        # )
+        # # First time
+        # available_dates = parse_calendar_text(calendar_element.text)
+        # # If no available dates, try next month
+        # if available_dates is None:
+        #     driver.find_element(
+        #         By.XPATH,
+        #         "//*[contains(text(), '次の月を見る')]",
+        #     ).click()
+        #     calendar_element = driver.find_element(
+        #         By.XPATH,
+        #         "//*[@id='step2-form']/div",
+        #     )
+        #     available_dates = parse_calendar_text(calendar_element.text)
 
-        # print(available_dates)
-        # Second time if nothing found, there's no available date at the moment
-        # if len(available_dates) == 0:
+        # # print(available_dates)
+        # # Second time if nothing found, there's no available date at the moment
+        # # if len(available_dates) == 0:
+        # #     return
+
+        # # Try booking for the date
+        # # TODO[jack06215]: Replace with actual booking time
+        # booking_date = datetime.now(tz=timezone(timedelta(hours=9)))
+        # driver.find_element(
+        #     By.XPATH,
+        #     "//*[contains(text(), " + str(booking_date.day) + ")]",
+        # ).click()
+        # driver.find_element(By.XPATH, "//*[@class='button']").click()
+
+        # timetable_element = driver.find_element(
+        #     By.XPATH,
+        #     "//*[@id='time_table']/tbody",
+        # )
+
+        with open(
+            f"{ROOT_DIR}/pokemon_cafe/sample_data/timetable_has_seats.txt",
+            "r",
+            encoding="UTF-8",
+        ) as fp:
+            timetable_element = fp.read()
+
+        available_timetables = get_timetable(timetable_element)
+        # if available_timetables is None:
         #     return
 
-        # Try booking for the date
-        # TODO[jack06215]: Replace with actual booking time
-        booking_date = datetime.now(tz=timezone(timedelta(hours=9)))
-        driver.find_element(
-            By.XPATH,
-            "//*[contains(text(), " + str(booking_date.day) + ")]",
-        ).click()
-        driver.find_element(By.XPATH, "//*[@class='button']").click()
-
-        timetable_element = driver.find_element(
-            By.XPATH,
-            "//*[@id='time_table']/tbody",
-        )
-
-        # with open(
-        #     f"{ROOT_DIR}/pokemon_cafe/sample_data/timetable_has_seats.txt",
-        #     "r",
-        #     encoding="UTF-8",
-        # ) as fp:
-        #     text = fp.read()
-
-        available_timetables = get_timetable(timetable_element.text)
-        if available_timetables is None:
-            return
-
-        booking_time = available_timetables[0]
-        res = driver.find_element(
-            By.XPATH,
-            f"//*[@id='time_table']/tbody/tr[{booking_time.row}]/td[{booking_time.col}]",
-        )
-        # print(res.rect)
-        res.click()
+        # booking_time = available_timetables[0]
+        # res = driver.find_element(
+        #     By.XPATH,
+        #     f"//*[@id='time_table']/tbody/tr[{booking_time.row}]/td[{booking_time.col}]",
+        # )
+        # # print(res.rect)
+        # res.click()
 
     except NoSuchElementException:
         pass
