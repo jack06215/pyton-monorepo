@@ -72,7 +72,7 @@ class OpenAIModel(BaseChatModel):
         except requests.RequestException as e:
             return json.dumps(
                 {
-                    "error": f"Error in invoking model after {self.max_retries} retries: {str(e)}"
+                    "error": f"Error in invoking model after {self.max_retries} retries: {str(e)}"  # noqa
                 }
             )
         except json.JSONDecodeError as e:
@@ -122,7 +122,7 @@ class OpenAIModel(BaseChatModel):
         except requests.RequestException as e:
             yield json.dumps(
                 {
-                    "error": f"Error in invoking model after {self.max_retries} retries: {str(e)}"
+                    "error": f"Error in invoking model after {self.max_retries} retries: {str(e)}"  # noqa
                 }
             )
         except json.JSONDecodeError as e:
