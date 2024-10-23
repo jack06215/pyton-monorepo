@@ -1,3 +1,4 @@
+ainvoke
 dotenv
 fastapi
 langchain_core
